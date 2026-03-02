@@ -14,14 +14,9 @@ api_key = os.getenv("MJ_APIKEY_PUBLIC")
 api_secret = os.getenv("MJ_APIKEY_PRIVATE")
 
 
-# =============================
-# PAGE CONFIG
-# =============================
 st.set_page_config(page_title="ExamInvigilate", layout="wide")
 
-# =============================
-# ENVIRONMENT VARIABLES 
-# =============================
+
 MAILJET_PUBLIC = api_key
 MAILJET_PRIVATE = api_secret
 FROM_EMAIL = "anyanwujustice27@gmail.com"
@@ -39,9 +34,6 @@ def get_time_slot(time_str):
     else:
         return None   
 
-# =============================
-# LOAD DATA
-# =============================
 def load_users():
     return pd.read_csv("users.csv")
 
@@ -59,9 +51,6 @@ def load_exams():
 def save_exams(df):
     df.to_csv("exams.csv", index=False)
 
-# =============================
-# PASSWORD VERIFY
-# =============================
 def verify_password(password, hashed):
     return bcrypt.checkpw(password.encode(), hashed.encode())
 
@@ -211,9 +200,6 @@ Issue:
 """
     send_email(ADMIN_EMAIL, "Admin", subject, body)
 
-# =============================
-# REMINDER SYSTEM
-# =============================
 def reminder_job():
     exams = load_exams()
     users = load_users()
@@ -250,16 +236,13 @@ def reminder_job():
                 exams.at[idx,col] = True
                 save_exams(exams)
 
-# Start scheduler once
 if "scheduler_started" not in st.session_state:
     scheduler = BackgroundScheduler()
     scheduler.add_job(reminder_job, 'interval', minutes=10)
     scheduler.start()
     st.session_state.scheduler_started = True
 
-# =============================
-# AUTHENTICATION
-# =============================
+
 users = load_users()
 exams = load_exams()
 
@@ -287,17 +270,13 @@ st.sidebar.write(f"Welcome {user['name']}")
 if st.sidebar.button("Logout"):
     st.session_state.logged_in = False
     st.rerun()
-
-# =============================
-# INVIGILATOR DASHBOARD
-# =============================
+    
 if user["role"] == "invigilator":
 
     my_exams = exams[exams["invigilator_id"] == user["id"]]
 
     st.title("Invigilator Dashboard")
 
-    # Metrics
     col1, col2, col3 = st.columns(3)
     col1.metric("Pending", len(my_exams[my_exams["status"]=="Pending"]))
     col2.metric("Confirmed", len(my_exams[my_exams["status"]=="Confirmed"]))
@@ -306,7 +285,6 @@ if user["role"] == "invigilator":
 
     tab1, tab2 = st.tabs(["Calendar", "Timetable"])
 
-    # Calendar
     with tab1:
         events = []
         for _, row in my_exams.iterrows():
@@ -367,19 +345,16 @@ if user["role"] == "invigilator":
             st.warning("No exams available.")
             st.stop()
     
-        # Create datetime
         all_exams["datetime"] = pd.to_datetime(
             all_exams["date"] + " " + all_exams["time"]
         )
     
-        # Day + Date columns
         all_exams["DAY"] = all_exams["datetime"].dt.strftime("%a").str.upper()
         all_exams["DATE"] = all_exams["datetime"].dt.strftime("%d/%m/%Y")
     
     
         all_exams["SLOT"] = all_exams["time"].apply(get_time_slot)
     
-        # Merge lecturer names
         all_exams = all_exams.merge(
             users[["id", "name"]],
             left_on="invigilator_id",
@@ -387,16 +362,11 @@ if user["role"] == "invigilator":
             how="left"
         )
     
-        # Combine course + lecturer into one column
         all_exams["DISPLAY"] = (
             all_exams["course"] + " (" + all_exams["name"] + ")"
         )
     
-        # Remove exams without valid slot
         all_exams = all_exams[all_exams["SLOT"].notna()]
-    
-        # Create pivot table
-        # Create pivot table
         timetable = all_exams.pivot_table(
             index=["DAY", "DATE"],
             columns="SLOT",
@@ -404,15 +374,10 @@ if user["role"] == "invigilator":
             aggfunc=lambda x: "\n".join(x)
         ).reset_index()
         
-        # Sort by actual datetime
         timetable = timetable.sort_values("DATE")
-        
-        # Replace NaN with empty string
         timetable = timetable.fillna("")
         
-        # Reorder columns
         desired_order = ["DAY", "DATE", "8:00-11:00", "11:30-2:30", "3:00-6:00"]
-        # Only include columns that exist (in case some slots have no exams)
         timetable = timetable[[col for col in desired_order if col in timetable.columns]]
         
         st.dataframe(timetable, width="stretch")
@@ -420,11 +385,7 @@ if user["role"] == "invigilator":
         st.download_button("⬇ Download Timetable", csv,
                             "my_exam_timetable.csv", "text/csv")
     
-        # =============================
-        # SECOND TABLE BELOW
-        # =============================
-    
-        # Sort first
+
         sorted_exams = all_exams.sort_values("datetime")
         
         st.subheader("Course – Invigilator Assignment List")
@@ -441,12 +402,12 @@ if user["role"] == "invigilator":
         st.dataframe(detailed, width="stretch")
 
 
-# =============================
+
 # ADMIN DASHBOARD
-# =============================
+
 elif user["role"] == "admin":
 
-    st.title("🛠 Admin Dashboard")
+    st.title("Admin Dashboard")
 
     col1,col2,col3 = st.columns(3)
     col1.metric("Total Exams", len(exams))
@@ -506,29 +467,21 @@ elif user["role"] == "admin":
             st.rerun()
 
     with tab3:
-
-
         st.subheader("Department Examination Timetable")
-
         all_exams = exams.copy()
-    
         if all_exams.empty:
             st.warning("No exams available.")
             st.stop()
     
-        # Create datetime
         all_exams["datetime"] = pd.to_datetime(
             all_exams["date"] + " " + all_exams["time"]
         )
-    
-        # Day + Date columns
+
         all_exams["DAY"] = all_exams["datetime"].dt.strftime("%a").str.upper()
         all_exams["DATE"] = all_exams["datetime"].dt.strftime("%d/%m/%Y")
     
-    
         all_exams["SLOT"] = all_exams["time"].apply(get_time_slot)
     
-        # Merge lecturer names
         all_exams = all_exams.merge(
             users[["id", "name"]],
             left_on="invigilator_id",
@@ -536,41 +489,26 @@ elif user["role"] == "admin":
             how="left"
         )
     
-        # Combine course + lecturer into one column
         all_exams["DISPLAY"] = (
             all_exams["course"] + " (" + all_exams["name"] + ")"
         )
-    
-        # Remove exams without valid slot
+
         all_exams = all_exams[all_exams["SLOT"].notna()]
     
-        # Create pivot table
-        # Create pivot table
         timetable = all_exams.pivot_table(
             index=["DAY", "DATE"],
             columns="SLOT",
             values="DISPLAY",
             aggfunc=lambda x: "\n".join(x)
         ).reset_index()
-        
-        # Sort by actual datetime
         timetable = timetable.sort_values("DATE")
-        
-        # Replace NaN with empty string
         timetable = timetable.fillna("")
         
-        # Reorder columns
         desired_order = ["DAY", "DATE", "8:00-11:00", "11:30-2:30", "3:00-6:00"]
-        # Only include columns that exist (in case some slots have no exams)
         timetable = timetable[[col for col in desired_order if col in timetable.columns]]
         
         st.dataframe(timetable, width="stretch")
     
-        # =============================
-        # SECOND TABLE BELOW
-        # =============================
-    
-        # Sort first
         sorted_exams = all_exams.sort_values("datetime")
         
         st.subheader("Course – Invigilator Assignment List")
@@ -704,15 +642,13 @@ elif user["role"] == "admin":
                         invigilators["name"] == new_invigilator_name
                     ].iloc[0]
     
-                    # Update exam record
                     exams.loc[exams["id"] == row["id"], "invigilator_id"] = new_invigilator["id"]
                     exams.loc[exams["id"] == row["id"], "issue_reported"] = False
                     exams.loc[exams["id"] == row["id"], "issue_message"] = ""
                     exams.loc[exams["id"] == row["id"], "status"] = "Pending"
     
                     save_exams(exams)
-    
-                    # Notify new invigilator
+
                     send_exam_notification(
                         new_invigilator["email"],
                         new_invigilator["name"],
