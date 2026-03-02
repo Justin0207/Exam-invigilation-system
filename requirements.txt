@@ -4,3 +4,4 @@ streamlit-calendar
 bcrypt
 mailjet-rest
 python-dotenv
+apscheduler
