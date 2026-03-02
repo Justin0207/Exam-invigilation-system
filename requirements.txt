@@ -1,6 +1,3 @@
 pandas
-bcrypt
-streamlit-calendar
 mailjet-rest
-APScheduler
 python-dotenv
