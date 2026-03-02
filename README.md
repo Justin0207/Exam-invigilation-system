@@ -22,7 +22,5 @@ A modern web-based exam invigilation management system built to automate lecture
 - Mailjet API
 
 
----
 
-## Project Structure
 
