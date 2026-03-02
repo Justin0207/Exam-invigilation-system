@@ -1,0 +1,9 @@
+id,name,email,password,role
+1,Admin,admin@email.com,$2b$12$KCCEh7E/umYbpA/dyurg7u84eVR8Qb4BzzcF9qApKrPYpd7mep3Pa,admin
+2,Dr Okeke,anyanwuchima04@gmail.com,$2b$12$2hVT7s1HBs1U9BWeh29Ab.WVXm1hzFkj9xL6f26ZLZr.kwrNuYsni,invigilator
+3,Dr Adebayo,adebayo@email.com,$2b$12$2hVT7s1HBs1U9BWeh29Ab.WVXm1hzFkj9xL6f26ZLZr.kwrNuYsni,invigilator
+4,Dr Musa,musa@email.com,$2b$12$2hVT7s1HBs1U9BWeh29Ab.WVXm1hzFkj9xL6f26ZLZr.kwrNuYsni,invigilator
+5,Dr Nwosu,nwosu@email.com,$2b$12$2hVT7s1HBs1U9BWeh29Ab.WVXm1hzFkj9xLZr.kwrNuYsni,invigilator
+6,Dr Hassan,hassan@email.com,$2b$12$2hVT7s1HBs1U9BWeh29Ab.WVXm1hzFkj9xL6f26ZLZr.kwrNuYsni,invigilator
+7,Dr Ibrahim,ibrahim@email.com,$2b$12$2hVT7s1HBs1U9BWeh29Ab.WVXm1hzFkj9xL6f26ZLZr.kwrNuYsni,invigilator
+8,Dr Eze,eze@email.com,$2b$12$2hVT7s1HBs1U9BWeh29Ab.WVXm1hzFkj9xL6f26ZLZr.kwrNuYsni,invigilator
