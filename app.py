@@ -109,7 +109,7 @@ Please log in to confirm.
 # """
 #     return send_email(to_email, to_name, subject, body)
 
-def send_exam_reminder(invigilator_email, invigilator_name, course, date, time, venue, message_type="Reminder"):
+def send_exam_reminder(invigilator_email, invigilator_name, course, date, time, venue, duration, message_type="Reminder"):
 
     mailjet = Client(auth=(MAILJET_PUBLIC, MAILJET_PRIVATE), version='v3.1')
 
@@ -228,9 +228,9 @@ def reminder_job():
                     invigilator["email"],
                     invigilator["name"],
                     row["course"],
-                    row["venue"],
                     row["date"],
                     row["time"],
+                    row["venue"],
                     row["duration"]
                 )
                 exams.at[idx,col] = True
@@ -598,6 +598,7 @@ elif user["role"] == "admin":
                             date=exam["date"],
                             time=exam["time"],
                             venue=exam["venue"],
+                            duration=exam["duration"], 
                             message_type="Upcoming Exam Reminder"
                         )
     
