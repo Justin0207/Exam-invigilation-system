@@ -307,7 +307,10 @@ if user["role"] == "invigilator":
             row = exams[exams["id"]==exam_id].iloc[0]
 
             st.write("Course:", row["course"])
+            st.write("Date:", row["date"]) 
+            st. write("Time:", row["time"]) 
             st.write("Venue:", row["venue"])
+            st. write("Duration:", row["duration"]) 
             st.write("Status:", row["status"])
 
             if row["status"]=="Pending":
