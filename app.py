@@ -46,6 +46,9 @@ def load_exams():
         if col not in df.columns:
             df[col] = False if "reminder" in col or col=="issue_reported" else ""
 
+    if "num_students" not in df.columns:
+        df["num_students"] = ""
+
     return df
 
 def save_exams(df):
@@ -86,28 +89,6 @@ Duration: {duration}
 Please log in to confirm.
 """
     return send_email(to_email, to_name, subject, body)
-
-# def send_exam_reminder(to_email, to_name, course, venue, date, time, duration):
-#     subject = f"Reminder: Upcoming Exam Invigilation - {course}"
-#     body = f"""
-# Hello {to_name},
-
-# This is a friendly reminder that you are scheduled to invigilate the following exam:
-
-# Course: {course}
-# Venue: {venue}
-# Date: {date}
-# Time: {time}
-# Duration: {duration}
-
-# Please ensure you arrive at least 30 minutes before the scheduled time.
-
-# If you are unable to attend, kindly notify the admin immediately by logging into the system.
-
-# Best regards,
-# Exam Coordination Team
-# """
-#     return send_email(to_email, to_name, subject, body)
 
 def send_exam_reminder(invigilator_email, invigilator_name, course, date, time, venue, duration, message_type="Reminder"):
 
@@ -308,9 +289,10 @@ if user["role"] == "invigilator":
 
             st.write("Course:", row["course"])
             st.write("Date:", row["date"]) 
-            st. write("Time:", row["time"]) 
+            st.write("Time:", row["time"]) 
             st.write("Venue:", row["venue"])
-            st. write("Duration:", row["duration"]) 
+            st.write("Duration:", row["duration"])
+            st.write("Number of Students:", row["num_students"])
             st.write("Status:", row["status"])
 
             if row["status"]=="Pending":
@@ -335,10 +317,7 @@ if user["role"] == "invigilator":
                 st.rerun()
 
     # Timetable
-
-    
     with tab2:
-
 
         st.subheader("Department Examination Timetable")
 
@@ -354,7 +333,6 @@ if user["role"] == "invigilator":
     
         all_exams["DAY"] = all_exams["datetime"].dt.strftime("%a").str.upper()
         all_exams["DATE"] = all_exams["datetime"].dt.strftime("%d/%m/%Y")
-    
     
         all_exams["SLOT"] = all_exams["time"].apply(get_time_slot)
     
@@ -399,8 +377,9 @@ if user["role"] == "invigilator":
             "date",
             "time",
             "duration",
-            "name"
-        ]].rename(columns={"name": "Invigilator"})
+            "name",
+            "num_students"
+        ]].rename(columns={"name": "Invigilator", "num_students": "No. of Students"})
         
         st.dataframe(detailed, width="stretch")
 
@@ -425,11 +404,26 @@ elif user["role"] == "admin":
         events=[]
         for _, row in exams.iterrows():
             events.append({
+                "id": row["id"],
                 "title": row["course"],
                 "start": f"{row['date']}T{row['time']}",
                 "color": "blue"
             })
-        calendar(events=events, options={"initialView":"dayGridMonth"})
+        selected_admin = calendar(events=events, options={"initialView":"dayGridMonth"})
+
+        if selected_admin and "eventClick" in selected_admin:
+            event = selected_admin["eventClick"]["event"]
+            exam_id = int(event["id"])
+            row = exams[exams["id"]==exam_id].iloc[0]
+
+            st.write("Course:", row["course"])
+            st.write("Date:", row["date"])
+            st.write("Time:", row["time"])
+            st.write("Venue:", row["venue"])
+            st.write("Duration:", row["duration"])
+            st.write("Number of Students:", row["num_students"])
+            st.write("Status:", row["status"])
+
     # Assign Exam
     with tab2:
         course = st.text_input("Course")
@@ -437,6 +431,7 @@ elif user["role"] == "admin":
         date = st.date_input("Date")
         time = st.time_input("Time")
         duration = st.text_input("Duration")
+        num_students = st.number_input("Number of Students", min_value=0, step=1)
 
         invigilators = users[users["role"]=="invigilator"]
         selected = st.selectbox("Assign To", invigilators["name"])
@@ -457,7 +452,8 @@ elif user["role"] == "admin":
                 "reminder_6h": False,
                 "reminder_1h": False,
                 "issue_reported": False,
-                "issue_message": ""
+                "issue_message": "",
+                "num_students": num_students
             }
 
             exams = pd.concat([exams, pd.DataFrame([new_exam])])
@@ -523,8 +519,9 @@ elif user["role"] == "admin":
             "time",
             "duration",
             "name",
-            "status"
-        ]].rename(columns={"name": "Invigilator"})
+            "status",
+            "num_students"
+        ]].rename(columns={"name": "Invigilator", "num_students": "No. of Students"})
         
         st.dataframe(detailed, width="stretch")
         
@@ -629,6 +626,7 @@ elif user["role"] == "admin":
                 st.write("Venue:", row["venue"])
                 st.write("Date:", row["date"])
                 st.write("Time:", row["time"])
+                st.write("Number of Students:", row["num_students"])
     
                 st.markdown("#### Reassign Exam")
     
@@ -667,4 +665,3 @@ elif user["role"] == "admin":
                     st.rerun()
     
                 st.divider()
-                
